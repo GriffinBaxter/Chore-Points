@@ -3,18 +3,22 @@
 const numberOfPeople = 4;
 
 const calculateRewards = () => {
-  const hardcodedPoints = [10, 20, 30, 40];
-  const avgPoints =
-    hardcodedPoints.reduce((a, b) => a + b, 0) / hardcodedPoints.length;
-  const deviations = hardcodedPoints.map((points) => points - avgPoints);
+  const pointsArray = [...Array(numberOfPeople).keys()].map((i) => {
+    const points = document.getElementById(
+      `points-${i.toString()}`,
+    ) as HTMLInputElement;
+    return points.value ? Number(points.value) : 0;
+  });
+  const avgPoints = pointsArray.reduce((a, b) => a + b, 0) / pointsArray.length;
+  const deviations = pointsArray.map((points) => points - avgPoints);
   const positiveDeviationsSum = deviations
     .filter((dev) => dev > 0)
     .reduce((a, b) => a + b, 0);
-  const negativeDeviationsSum = deviations
-    .filter((dev) => dev < 0)
-    .reduce((a, b) => a + b, 0);
+  const negativeDeviationsSumAbs = Math.abs(
+    deviations.filter((dev) => dev < 0).reduce((a, b) => a + b, 0),
+  );
   const rewards = [];
-  for (const points of hardcodedPoints) {
+  for (const points of pointsArray) {
     if (points > avgPoints) {
       rewards.push(
         ((40 / (positiveDeviationsSum + 0.001)) * (points - avgPoints)).toFixed(
@@ -24,7 +28,8 @@ const calculateRewards = () => {
     } else if (points < avgPoints) {
       rewards.push(
         (
-          -(15 / (negativeDeviationsSum + 0.001)) * Math.abs(points - avgPoints)
+          -(15 / (negativeDeviationsSumAbs + 0.001)) *
+          Math.abs(points - avgPoints)
         ).toFixed(2),
       );
     } else {
