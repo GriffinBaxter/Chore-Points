@@ -8,10 +8,14 @@ const NUMBER_OF_PEOPLE_MAX = 20;
 const POINTS_DEFAULT = 0;
 const EPSILON = 0.001;
 
+const getPointsId = (personIndex: number) => {
+  return `points-${personIndex.toString()}`;
+};
+
 const calculateRewards = (numberOfPeople: number) => {
-  const pointsArray = [...Array(numberOfPeople).keys()].map((i) => {
+  const pointsArray = [...Array(numberOfPeople).keys()].map((personIndex) => {
     const points = document.getElementById(
-      `points-${i.toString()}`,
+      getPointsId(personIndex),
     ) as HTMLInputElement;
     return points.value ? Number(points.value) : POINTS_DEFAULT;
   });
@@ -43,7 +47,14 @@ const calculateRewards = (numberOfPeople: number) => {
       rewards.push(POINTS_DEFAULT.toFixed(2));
     }
   }
-  console.log(rewards);
+  alert(
+    `Rewards:\n\n${rewards
+      .map((reward, personIndex) => {
+        const isNegative = reward.startsWith("-");
+        return `Person ${(personIndex + 1).toString()}: ${isNegative ? "-" : ""}$${reward.slice(isNegative ? 1 : 0)}`;
+      })
+      .join("\n")}`,
+  );
 };
 
 export default function Home() {
@@ -85,20 +96,20 @@ export default function Home() {
             type="number"
             defaultValue={NUMBER_OF_PEOPLE_DEFAULT}
             min={NUMBER_OF_PEOPLE_MIN}
-            max={20}
+            max={NUMBER_OF_PEOPLE_MAX}
             onChange={(e) => {
               handleNumberOfPeopleChange(e);
             }}
           />
         </div>
-        {[...Array(numberOfPeople).keys()].map((i) => (
-          <div className="flex" key={i}>
-            <label className="w-24" htmlFor={`points-${i.toString()}`}>
-              Points ({i + 1}):
+        {[...Array(numberOfPeople).keys()].map((personIndex) => (
+          <div className="flex" key={personIndex}>
+            <label className="w-40" htmlFor={getPointsId(personIndex)}>
+              Points (Person {personIndex + 1}):
             </label>
             <input
               className="w-12 border-2 border-solid border-black text-center"
-              id={`points-${i.toString()}`}
+              id={getPointsId(personIndex)}
               type="number"
               defaultValue={POINTS_DEFAULT}
             />
