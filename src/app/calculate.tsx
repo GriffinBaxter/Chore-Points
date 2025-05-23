@@ -25,7 +25,7 @@ export default function Calculate({
 }: {
   setRewards: Dispatch<SetStateAction<string[]>>;
 }) {
-  const [cookies, setCookie] = useCookies<
+  const [cookies, setCookie, removeCookie] = useCookies<
     typeof COOKIE_POINTS,
     { points?: number[] }
   >([COOKIE_POINTS]);
@@ -66,7 +66,9 @@ export default function Calculate({
   };
 
   const calculateRewards = () => {
-    const pointsArray = cookies.points ?? [];
+    const pointsArray =
+      cookies.points ??
+      (Array(NUMBER_OF_PEOPLE_DEFAULT).fill(POINTS_DEFAULT) as number[]);
     const avgPoints =
       pointsArray.reduce((a, b) => a + b, 0) / pointsArray.length;
     const deviations = pointsArray.map((points) => points - avgPoints);
@@ -99,6 +101,11 @@ export default function Calculate({
     setRewards(rewards);
   };
 
+  const reset = () => {
+    setNumberOfPeople(NUMBER_OF_PEOPLE_DEFAULT);
+    removeCookie(COOKIE_POINTS);
+  };
+
   return (
     <>
       <button
@@ -106,6 +113,12 @@ export default function Calculate({
         onClick={calculateRewards}
       >
         Calculate Points
+      </button>
+      <button
+        className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-700"
+        onClick={reset}
+      >
+        Reset
       </button>
       <div className="flex">
         <label className="w-40" htmlFor={"numberOfPeople"}>
