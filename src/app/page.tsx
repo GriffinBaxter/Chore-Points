@@ -5,8 +5,13 @@ import Calculate from "./calculate";
 import Display from "./display";
 import { CookiesProvider } from "react-cookie";
 
+export interface Reward {
+  name: string;
+  value: string;
+}
+
 export default function Home() {
-  const [rewards, setRewards] = useState<string[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
 
   return (
     <div className="grid min-h-screen grid-rows-[20px_1fr_20px] justify-items-center gap-16 p-8 pb-20 font-[family-name:var(--font-geist-sans)] sm:p-20">

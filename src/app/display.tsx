@@ -1,9 +1,11 @@
+import { Reward } from "./page";
+
 export default function Display({
   rewards,
   setRewards,
 }: {
-  rewards: string[];
-  setRewards: React.Dispatch<React.SetStateAction<string[]>>;
+  rewards: Reward[];
+  setRewards: React.Dispatch<React.SetStateAction<Reward[]>>;
 }) {
   return (
     <>
@@ -16,11 +18,11 @@ export default function Display({
         Go Back
       </button>
       {rewards.map((reward, personIndex) => {
-        const isNegative = reward.startsWith("-");
+        const isNegative = reward.value.startsWith("-");
         return (
           <p key={personIndex}>
-            Person {personIndex + 1}: {isNegative ? "-" : ""}$
-            {reward.slice(isNegative ? 1 : 0)}
+            {reward.name}: {isNegative ? "-" : ""}$
+            {reward.value.slice(isNegative ? 1 : 0)}
           </p>
         );
       })}

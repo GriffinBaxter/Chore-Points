@@ -8,6 +8,7 @@ import {
   useEffect,
 } from "react";
 import { useCookies } from "react-cookie";
+import { Reward } from "./page";
 
 const NUMBER_OF_PEOPLE_DEFAULT = 4;
 const NUMBER_OF_PEOPLE_MIN = 1;
@@ -15,6 +16,15 @@ const NUMBER_OF_PEOPLE_MAX = 20;
 const POINTS_DEFAULT = 0;
 const EPSILON = 0.001;
 const COOKIE_POINTS = "points";
+const COOKIE_NAMES = "names";
+
+const getNameId = (personIndex: number) => {
+  return `name-${personIndex.toString()}`;
+};
+
+const getNameDefault = (personIndex: number) => {
+  return `Person ${(personIndex + 1).toString()}`;
+};
 
 const getPointsId = (personIndex: number) => {
   return `points-${personIndex.toString()}`;
@@ -23,24 +33,27 @@ const getPointsId = (personIndex: number) => {
 export default function Calculate({
   setRewards,
 }: {
-  setRewards: Dispatch<SetStateAction<string[]>>;
+  setRewards: Dispatch<SetStateAction<Reward[]>>;
 }) {
   const [cookies, setCookie, removeCookie] = useCookies<
-    typeof COOKIE_POINTS,
-    { points?: number[] }
-  >([COOKIE_POINTS]);
+    typeof COOKIE_NAMES | typeof COOKIE_POINTS,
+    { names?: string[]; points?: number[] }
+  >([COOKIE_NAMES, COOKIE_POINTS]);
 
   const [numberOfPeople, setNumberOfPeople] = useState(
     NUMBER_OF_PEOPLE_DEFAULT,
   );
 
   useEffect(() => {
-    if (cookies.points) {
+    if (cookies.names) {
+      setNumberOfPeople(cookies.names.length);
+    } else if (cookies.points) {
       setNumberOfPeople(cookies.points.length);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    handleNameChange();
     handlePointsChange();
   }, [numberOfPeople]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -51,6 +64,18 @@ export default function Calculate({
         setNumberOfPeople(value);
       }
     }
+  };
+
+  const handleNameChange = () => {
+    setCookie(
+      COOKIE_NAMES,
+      [...Array(numberOfPeople).keys()].map((personIndex) => {
+        const name = document.getElementById(
+          getNameId(personIndex),
+        ) as HTMLInputElement;
+        return name.value || getNameDefault(personIndex);
+      }),
+    );
   };
 
   const handlePointsChange = () => {
@@ -78,48 +103,51 @@ export default function Calculate({
     const negativeDeviationsSumAbs = Math.abs(
       deviations.filter((dev) => dev < 0).reduce((a, b) => a + b, 0),
     );
-    const rewards = [];
-    for (const points of pointsArray) {
-      if (points > avgPoints) {
-        rewards.push(
-          (
+    setRewards(
+      pointsArray.map((points, personIndex) => {
+        const reward: Reward = {
+          name: cookies.names?.[personIndex] ?? getNameDefault(personIndex),
+          value: POINTS_DEFAULT.toFixed(2),
+        };
+        if (points > avgPoints) {
+          reward.value = (
             (40 / (positiveDeviationsSum + EPSILON)) *
             (points - avgPoints)
-          ).toFixed(2),
-        );
-      } else if (points < avgPoints) {
-        rewards.push(
-          (
+          ).toFixed(2);
+        } else if (points < avgPoints) {
+          reward.value = (
             -(15 / (negativeDeviationsSumAbs + EPSILON)) *
             Math.abs(points - avgPoints)
-          ).toFixed(2),
-        );
-      } else {
-        rewards.push(POINTS_DEFAULT.toFixed(2));
-      }
-    }
-    setRewards(rewards);
+          ).toFixed(2);
+        }
+        return reward;
+      }),
+    );
   };
 
   const reset = () => {
     setNumberOfPeople(NUMBER_OF_PEOPLE_DEFAULT);
+    removeCookie(COOKIE_NAMES);
     removeCookie(COOKIE_POINTS);
+    location.reload(); // TODO: remove the need for a page reload
   };
 
   return (
     <>
-      <button
-        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
-        onClick={calculateRewards}
-      >
-        Calculate Points
-      </button>
-      <button
-        className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-700"
-        onClick={reset}
-      >
-        Reset
-      </button>
+      <div className="flex gap-32">
+        <button
+          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-700"
+          onClick={calculateRewards}
+        >
+          Calculate Points
+        </button>
+        <button
+          className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-700"
+          onClick={reset}
+        >
+          Reset
+        </button>
+      </div>
       <div className="flex">
         <label className="w-40" htmlFor={"numberOfPeople"}>
           Number of People:
@@ -138,8 +166,24 @@ export default function Calculate({
       </div>
       {[...Array(numberOfPeople).keys()].map((personIndex) => (
         <div className="flex" key={personIndex}>
-          <label className="w-40" htmlFor={getPointsId(personIndex)}>
-            Points (Person {personIndex + 1}):
+          <label className="w-16" htmlFor={getNameId(personIndex)}>
+            Name:
+          </label>
+          <input
+            className="mr-12 w-32 border-2 border-solid border-black text-center"
+            id={getNameId(personIndex)}
+            type="text"
+            placeholder={`Person ${(personIndex + 1).toString()}`}
+            defaultValue={
+              cookies.names?.[personIndex] !=
+              `Person ${(personIndex + 1).toString()}`
+                ? cookies.names?.[personIndex]
+                : ""
+            }
+            onChange={handleNameChange}
+          />
+          <label className="w-16" htmlFor={getPointsId(personIndex)}>
+            Points:
           </label>
           <input
             className="w-12 border-2 border-solid border-black text-center"
